@@ -22,7 +22,7 @@ void payloadVarRemove(payloadVar *plv){
 }
 
 void payloadInit(payload *pl){
-	vectorInit(&pl->vars);
+	vectorInit(&pl->vars, sizeof(payloadVar));
 }
 
 //Add a new variable to the payload!
@@ -42,7 +42,7 @@ void payloadAddVar(payload *pl, const char *name, const size_t nameLength, const
 	tempVar.valueLength = valueLength;
 
 	//Add the variable to our vector!
-	vectorAdd(&pl->vars, &tempVar, sizeof(tempVar));
+	vectorAdd(&pl->vars, &tempVar, 1);
 }
 
 //Find a specific variable!

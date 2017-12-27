@@ -16,19 +16,19 @@ const static char *base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst
 
 
 void cryptorInit(cryptor *crypt){
-	vectorInit(&crypt->iv);
+	vectorInit(&crypt->iv, sizeof(char));
 	AESInit(&crypt->AES);
 }
 
 void cryptorSetIV(cryptor *crypt, const char *str, const size_t strLength){
 	vectorClear(&crypt->iv);
-	vectorInit(&crypt->iv);
+	vectorInit(&crypt->iv, sizeof(char));
 	base64Decode(str, strLength, &crypt->iv);
 }
 
 void cryptorDecrypt(cryptor *crypt, const char *str, const size_t strLength, char **outStr, size_t *outLength){
 	vector outVec;
-	vectorInit(&outVec);
+	vectorInit(&outVec, sizeof(char));
 	base64Decode(str, strLength, &outVec);
 
 	decryptBlocks(crypt, &outVec);
@@ -58,15 +58,13 @@ void cryptorRemove(cryptor *crypt){
 
 static void decryptBlocks(cryptor *crypt, vector *output){
 	vector tempIV;
-	vectorInit(&tempIV);
-	size_t a, b;
-	for(a = 0; a < crypt->iv.size; ++a){
-		vectorAdd(&tempIV, (char *)vectorGet(&crypt->iv, a), sizeof(char));
-	}
+	vectorInit(&tempIV, sizeof(char));
+	vectorAdd(&tempIV, crypt->iv.data, crypt->iv.size);
 
 	char vecVal;
 	char tempArray[16];
 
+	size_t a, b;
 	for(a = 0; a < output->size; a += sizeof(tempArray)){
 		for(b = 0; b < sizeof(tempArray); ++b){
 			if(a + b < output->size){
@@ -80,15 +78,12 @@ static void decryptBlocks(cryptor *crypt, vector *output){
 
 		for(b = 0; b < sizeof(tempArray) && a + b < output->size; ++b){
 			vecVal = *((char *)vectorGet(output, a + b)) ^ *((char *)vectorGet(&tempIV, b));
-			vectorSet(output, a + b, &vecVal, sizeof(vecVal));
+			vectorSet(output, a + b, &vecVal, 1);
 		}
 
-		for(b = 0; b < sizeof(tempArray); ++b){
-			if(b > tempIV.size){
-				vectorAdd(&tempIV, &tempArray[b], sizeof(*tempArray));
-			}else{
-				vectorSet(&tempIV, b, &tempArray[b], sizeof(*tempArray));
-			}
+		vectorSet(&tempIV, 0, tempArray, tempIV.size);
+		if(sizeof(tempArray) > tempIV.size){
+			vectorAdd(&tempIV, tempArray, sizeof(tempArray) - tempIV.size);
 		}
 	}
 
@@ -120,7 +115,7 @@ static void base64Decode(const char *str, const size_t strLength, vector *output
 				break;
 			}
 
-			vectorAdd(output, &tempArray2[b], sizeof(*tempArray2));
+			vectorAdd(output, &tempArray2[b], 1);
 		}
 	}
 }

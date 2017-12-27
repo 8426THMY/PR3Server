@@ -227,9 +227,11 @@ void AESDecrypt(AESKey *AES, const size_t offset, vector *output){
 	}
 
 
-	for(i = 0; i < 16 && i + offset < output->size; i++){
-		vectorSet(output, i + offset, &state[i], sizeof(*state));
+	i = output->size - offset;
+	if(i > 16){
+		i = 16;
 	}
+	vectorSet(output, offset, state, i);
 }
 
 void AESRemove(AESKey *AES){

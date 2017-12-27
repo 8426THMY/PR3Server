@@ -4,76 +4,56 @@
 #include <string.h>
 
 
-void vectorInit(vector *vec){
-	vec->data = malloc(sizeof(void *));
-	vec->capacity = 1;
-	vec->size = 0;
+void vectorInit(vector *v, const size_t elementSize){
+	v->data = malloc(elementSize);
+	v->elementSize = elementSize;
+	v->capacity = 1;
+	v->size = 0;
 }
 
-void vectorResize(vector *vec, const size_t capacity){
-	if(vec->capacity != capacity){
-		void **tempData = realloc(vec->data, capacity * sizeof(void *));
 
-		if(tempData != NULL){
-			vec->data = tempData;
-			vec->capacity = capacity;
+void vectorResize(vector *v, const size_t capacity){
+	void *tempData = realloc(v->data, v->elementSize * capacity);
+	if(tempData != NULL){
+		v->data = tempData;
+		v->capacity = capacity;
+	}
+}
+
+void vectorAdd(vector *v, const void *data, const size_t num){
+	if(num > 0){
+		v->size += num;
+		if(v->size >= v->capacity){
+			vectorResize(v, v->size * 2);
+		}
+		memcpy(v->data + (v->size - num) * v->elementSize, data, v->elementSize * num);
+	}
+}
+
+void vectorRemove(vector *v, const size_t pos){
+	if(pos < v->size){
+		--v->size;
+		if(pos != v->size){
+			memmove(v->data + pos * v->elementSize, v->data + (pos + 1) * v->elementSize, (v->size - pos) * v->elementSize);
 		}
 	}
 }
 
-void vectorAdd(vector *vec, void *data, const size_t bytes){
-	void *tempPointer = malloc(bytes);
-	if(tempPointer != NULL){
-		if(vec->size == vec->capacity){
-			vectorResize(vec, vec->capacity * 2);
-		}
-		vec->data[vec->size] = tempPointer;
-		memcpy(vec->data[vec->size], data, bytes);
-		++vec->size;
-	}
-}
-
-void vectorRemove(vector *vec, const size_t pos){
-	if(pos < vec->size){
-		free(vec->data[pos]);
-		--vec->size;
-
-		size_t i;
-		for(i = pos; i < vec->size; ++i){
-			vec->data[i] = vec->data[i + 1];
-		}
-	}
-}
-
-void *vectorGet(const vector *vec, const size_t pos){
-	if(pos < vec->size){
-		return(vec->data[pos]);
+void *vectorGet(const vector *v, const size_t pos){
+	if(pos < v->size){
+		return(v->data + pos * v->elementSize);
 	}
 
 	return(NULL);
 }
 
-void vectorSet(vector *vec, const size_t pos, void *data, const size_t bytes){
-	if(pos < vec->size){
-		void *tempData = realloc(vec->data[pos], bytes);
-
-		if(tempData != NULL){
-			vec->data[pos] = tempData;
-			memcpy(vec->data[pos], data, bytes);
-		}
+void vectorSet(vector *v, const size_t pos, const void *data, const size_t num){
+	if(pos + num <= v->size){
+		memcpy(v->data + pos * v->elementSize, data, v->elementSize * num);
 	}
 }
 
-void vectorClear(vector *vec){
-	if(vec->data != NULL){
-		size_t i;
-		for(i = 0; i < vec->size; ++i){
-			free(vec->data[i]);
-		}
-		free(vec->data);
 
-		vec->data = NULL;
-	}
-	vec->capacity = 0;
-	vec->size = 0;
+void vectorClear(vector *v){
+	free(v->data);
 }

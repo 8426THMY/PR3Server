@@ -6,19 +6,22 @@
 
 
 typedef struct vector {
-	void **data;
+	void *data;
+	size_t elementSize;
 	size_t capacity;
 	size_t size;
 } vector;
 
 
-void vectorInit(vector *vec);
-void vectorResize(vector *vec, const size_t capacity);
-void vectorAdd(vector *vec, void *data, const size_t bytes);
-void vectorRemove(vector *vec, const size_t pos);
-void *vectorGet(const vector *vec, const size_t pos);
-void vectorSet(vector *vec, const size_t pos, void *data, const size_t bytes);
-void vectorClear(vector *vec);
+void vectorInit(vector *v, const size_t elementSize);
+
+void vectorResize(vector *v, const size_t capacity);
+void vectorAdd(vector *v, const void *data, const size_t num);
+void vectorRemove(vector *v, const size_t pos);
+void *vectorGet(const vector *v, const size_t pos);
+void vectorSet(vector *v, const size_t pos, const void *data, const size_t);
+
+void vectorClear(vector *v);
 
 
 #endif
